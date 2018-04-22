@@ -1,10 +1,11 @@
 library(tidyverse)
+library(rpart)
+library(rpart.plot)
 
 # Examine data ------------------------------------------------------------
 
 mushrooms <- read.csv("data/mushrooms.csv")
 str(mushrooms)
-glimpse(mushrooms)
 summary(mushrooms)
 
 
@@ -27,8 +28,7 @@ test_lab <- test$class
 
 # Decision trees ----------------------------------------------------------
 
-library(rpart)
-library(rpart.plot)
+# train the model
 set.seed(50)
 mush_tree1 <- rpart(class ~ ., data = train, method = "class")
 
@@ -39,9 +39,16 @@ rpart.plot(mush_tree1, type = 4, extra = 101)
 #' odor == aln & spore.print.color == r ~ poisonous
 #' odor == aln & spore.print.color == bhknouwy ~ edible
 
+# predicting the test data
 mush_pred1 <- predict(mush_tree1, newdata = test, type = "class")
-(mush_confus1 <- table(mush_pred1, test$class))
+
+# confusion table
+(mush_confus1 <- table(mush_pred1, test$class, deparse.level = 2))
+# accuracy
 (mush_acc1 <- sum(diag(mush_confus1) / sum(mush_confus1)))
+# false negative rate
+(mush_fnr1 <- sum(mush_pred1 == "e" & test$class == "p") / sum(test$class == "p"))
+
 
 # finding out which mushrooms were misclassified
 test %>%
@@ -56,3 +63,5 @@ test %>%
     summarise(correct = sum(mush_pred1 == class), 
               wrong = sum(mush_pred1 != class))
 #' 207 mushrooms had no odor, white spore prints; 191 correct 16 wrong  
+#' 
+#' 
